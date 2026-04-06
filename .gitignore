@@ -1,0 +1,12 @@
+# Source material (large files, not for distribution)
+**/raw-data/
+**/transcripts/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~

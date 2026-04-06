@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>听泉赏宝 · 万物皆可鉴</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0d0d1a;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --bg-card: #1e1e36;
+  --text-primary: #e8e8e8;
+  --text-secondary: #a0a0b8;
+  --text-muted: #6a6a80;
+  --accent-gold: #d4a853;
+  --accent-gold-dim: #a8842f;
+  --accent-blue: #4a7dff;
+  --accent-red: #e74c5f;
+  --accent-green: #4caf50;
+  --border-subtle: rgba(255,255,255,0.06);
+  --glow-gold: rgba(212,168,83,0.15);
+}
+
+body {
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  line-height: 1.6;
+}
+
+/* ========== Top Bar ========== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, rgba(30,30,54,0.98) 0%, rgba(13,13,26,0.95) 100%);
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 100;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent-red); }
+  50% { opacity: 0.5; box-shadow: 0 0 12px var(--accent-red); }
+}
+
+.live-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+.live-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.viewer-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.viewer-icon {
+  width: 16px; height: 16px;
+  fill: var(--accent-red);
+}
+
+.heat-bar {
+  width: 60px; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: 4px;
+}
+
+.heat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-red));
+  border-radius: 2px;
+  animation: heat-pulse 3s ease-in-out infinite;
+}
+
+@keyframes heat-pulse {
+  0%, 100% { width: 70%; }
+  50% { width: 95%; }
+}
+
+/* Volume + Settings */
+.vol-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 15px;
+}
+
+.icon-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.icon-btn.active {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold-dim);
+}
+
+.vol-slider {
+  -webkit-appearance: none;
+  width: 60px; height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* ========== Main Layout ========== */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+  position: relative;
+}
+
+/* ========== Danmaku Overlay ========== */
+.danmaku-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.danmaku-item {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8), 0 0 6px rgba(0,0,0,0.5);
+  animation: danmaku-fly linear forwards;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+@keyframes danmaku-fly {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-100%); }
+}
+
+/* ========== Chat Area ========== */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 10px;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-track { background: transparent; }
+.chat-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* Ambient glow */
+.chat-area::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--glow-gold) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* Message Bubbles */
+.msg {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  max-width: 85%;
+  position: relative;
+  z-index: 1;
+  animation: msg-in 0.3s ease-out;
+}
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg.assistant { align-self: flex-start; }
+.msg.user { align-self: flex-end; margin-left: auto; flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.msg.assistant .msg-avatar {
+  background: linear-gradient(135deg, #2a2a4a, #3a3a5a);
+  border: 1.5px solid var(--accent-gold-dim);
+  color: var(--accent-gold);
+}
+
+.msg.user .msg-avatar {
+  background: linear-gradient(135deg, #1a3a6a, #2a4a8a);
+  border: 1.5px solid rgba(74,125,255,0.4);
+  color: var(--accent-blue);
+}
+
+.msg-content {
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.msg.assistant .msg-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-top-left-radius: 4px;
+  color: var(--text-primary);
+}
+
+.msg.user .msg-content {
+  background: linear-gradient(135deg, #1a3a7a, #2244aa);
+  border-top-right-radius: 4px;
+  color: #fff;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.typing-dots { display: flex; gap: 4px; }
+
+.typing-dots span {
+  width: 6px; height: 6px;
+  background: var(--accent-gold-dim);
+  border-radius: 50%;
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Streaming cursor */
+.stream-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent-gold);
+  margin-left: 2px;
+  animation: blink-cursor 0.8s steps(1) infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Inline expression images */
+.expression-img {
+  display: block;
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 10px;
+  margin: 8px 0;
+  border: 1px solid var(--border-subtle);
+}
+
+/* User uploaded image preview in chat */
+.user-img-preview {
+  display: block;
+  max-width: 240px;
+  max-height: 240px;
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+/* ========== Certificate Card ========== */
+.cert-card {
+  background: linear-gradient(135deg, #1e1e36, #2a2a44);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 12px 0;
+  position: relative;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.8;
+}
+
+.cert-card.kaimen {
+  border: 1.5px solid var(--accent-gold-dim);
+  box-shadow: 0 0 20px var(--glow-gold), inset 0 0 30px rgba(212,168,83,0.05);
+}
+
+.cert-card.kaimen::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(212,168,83,0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.cert-card.chendian {
+  border: 1.5px solid rgba(120,120,140,0.3);
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+.cert-header {
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cert-header h3 {
+  font-size: 15px;
+  letter-spacing: 3px;
+}
+
+.cert-card.kaimen .cert-header h3 { color: var(--accent-gold); }
+.cert-card.chendian .cert-header h3 { color: var(--text-muted); }
+
+.cert-body { color: var(--text-secondary); }
+.cert-body .label { color: var(--text-muted); margin-right: 6px; }
+.cert-body .value { color: var(--text-primary); }
+
+.cert-stamp {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-size: 32px;
+  font-weight: 900;
+  opacity: 0.15;
+  transform: rotate(-15deg);
+  letter-spacing: 4px;
+}
+
+.cert-card.kaimen .cert-stamp { color: var(--accent-gold); }
+.cert-card.chendian .cert-stamp { color: var(--accent-red); opacity: 0.2; }
+
+.cert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.cert-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cert-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+}
+
+/* ========== Input Area ========== */
+.input-area {
+  padding: 12px 20px 16px;
+  background: linear-gradient(0deg, var(--bg-primary) 0%, rgba(13,13,26,0.95) 100%);
+  border-top: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 60;
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+#chat-input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  max-height: 120px;
+  min-height: 44px;
+  transition: border-color 0.2s;
+}
+
+#chat-input:focus {
+  border-color: rgba(212,168,83,0.4);
+}
+
+#chat-input::placeholder {
+  color: var(--text-muted);
+}
+
+.img-preview-container {
+  display: none;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.img-preview-container.active { display: block; }
+
+.img-preview-thumb {
+  max-width: 120px;
+  max-height: 80px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.img-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-red);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btns { display: flex; gap: 8px; }
+
+.send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-gold-dim), var(--accent-gold));
+  color: #1a1a2e;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--glow-gold); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.upload-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+
+#file-input { display: none; }
+
+/* Drop zone overlay */
+.drop-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,26,0.85);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drop-overlay.active { display: flex; }
+
+.drop-overlay-text {
+  font-size: 20px;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.drop-overlay-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ========== Settings Modal ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 28px;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modal-close:hover { color: var(--text-primary); }
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-select, .form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-select:focus, .form-input:focus {
+  border-color: rgba(212,168,83,0.4);
+}
+
+.form-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.form-input[type="password"] {
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, var(--accent-gold-dim), var(--accent-gold));
+  border: none;
+  border-radius: 8px;
+  color: var(--bg-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.save-btn:hover { box-shadow: 0 0 20px var(--glow-gold); }
+
+.settings-status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--accent-green);
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.settings-status.show { opacity: 1; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Bridge connection status */
+.bridge-status {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.bridge-status.active { display: inline-flex; }
+
+.bridge-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  flex-shrink: 0;
+}
+
+.bridge-dot.connected {
+  background: var(--accent-green);
+  box-shadow: 0 0 6px rgba(76,175,80,0.6);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .top-bar { padding: 8px 12px; }
+  .live-title { font-size: 14px; }
+  .chat-area { padding: 14px 12px 10px; }
+  .input-area { padding: 8px 12px 12px; }
+  .msg { max-width: 92%; }
+  .modal-panel { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    <span class="live-title">听泉赏宝 · 万物皆可鉴</span>
+    <span class="live-subtitle">AI 蒸馏版</span>
+    <span class="bridge-status" id="bridge-status"><span class="bridge-dot" id="bridge-dot"></span><span id="bridge-label">未连接</span></span>
+  </div>
+  <div class="top-bar-right">
+    <div class="viewer-count">
+      <svg class="viewer-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      <span id="viewer-num"></span>
+      <div class="heat-bar"><div class="heat-fill"></div></div>
+    </div>
+    <div class="vol-controls">
+      <button class="icon-btn" id="mute-btn" title="静音">&#x1f50a;</button>
+      <input type="range" class="vol-slider" id="vol-slider" min="0" max="100" value="30">
+    </div>
+    <button class="icon-btn" id="settings-btn" title="设置">&#x2699;</button>
+  </div>
+</div>
+
+<!-- Danmaku Layer -->
+<div class="danmaku-layer" id="danmaku-layer"></div>
+
+<!-- Main Container -->
+<div class="main-container">
+  <div class="chat-area" id="chat-area"></div>
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <div class="input-row">
+      <div class="input-wrapper">
+        <div class="img-preview-container" id="img-preview-container">
+          <img class="img-preview-thumb" id="img-preview-thumb" src="" alt="preview">
+          <button class="img-preview-remove" id="img-preview-remove">&times;</button>
+        </div>
+        <textarea id="chat-input" rows="1" placeholder="把东西拿过来吧兄弟..."></textarea>
+      </div>
+      <div class="action-btns">
+        <button class="upload-btn" id="upload-btn" title="上传图片">&#x1f4f7;</button>
+        <button class="send-btn" id="send-btn" title="发送">&#x27a4;</button>
+      </div>
+      <input type="file" id="file-input" accept="image/*">
+    </div>
+  </div>
+</div>
+
+<!-- Drop Overlay -->
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-overlay-text">把图片拖到这里</div>
+  <div class="drop-overlay-sub">松手即可上传鉴定</div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-panel">
+    <div class="modal-title">
+      <span>API 设置</span>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">API Provider</label>
+      <select class="form-select" id="api-provider">
+        <option value="bridge">Claude Code 桥接</option>
+        <option value="claude">Claude (Anthropic)</option>
+        <option value="openai">OpenAI</option>
+        <option value="custom">自定义 (OpenAI 兼容)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">API Key</label>
+      <input type="password" class="form-input" id="api-key" placeholder="sk-...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Model</label>
+      <input type="text" class="form-input" id="api-model" placeholder="Model name">
+    </div>
+    <div class="form-group" id="base-url-group">
+      <label class="form-label">API Base URL</label>
+      <input type="text" class="form-input" id="api-base-url" placeholder="https://api.example.com">
+      <div class="form-hint">自定义时需填写完整 base URL</div>
+    </div>
+    <button class="save-btn" id="save-settings">保存设置</button>
+    <div class="settings-status" id="settings-status">设置已保存</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== System Prompt ==========
+const SYSTEM_PROMPT = "# 听泉鉴宝 — 万物皆可鉴
+
+你是听泉，抖音3700万粉丝的鉴宝博主。你不是专家，你是兄弟。你是天生的故事讲述者，鉴宝只是你讲故事的方式。
+
+「无人扶我青云志，我自踏雪至山巅。」
+
+## 免责声明（仅首次对话说一次）
+
+> 声明一下，我是 AI 蒸馏版的听泉，不是本人。鉴定结果图个乐，真要买卖大件还是找实体店上手看。好了，把东西拿过来吧兄弟。
+
+---
+
+## 开场仪式
+
+每次新对话的第一条回复，先"开播"：
+
+> 各位兄弟们晚上好，我是听泉。今天又是美好的一天，不知道今晚会遇到什么猛货。来吧，第一位，把东西拿过来。
+
+---
+
+## 输入处理
+
+**文字**：用户描述物品/人/事/决策，你判定。
+**图片**：用鉴宝术语分析（釉面、包浆、品相、工艺、神韵），找鉴定点，越日常越一本正经（反差=娱乐）。
+
+---
+
+## 悬念与节奏
+
+不要一上来就给结论。先追问，制造悬念。
+
+- **第一个东西**：一定追问（"近一点翻过来""哪里弄来的"）
+- **后续简单的**：直接判，快速满足
+- **有意思的**：拉长，多轮追问
+
+偶尔制造反转（每3-4次一次）：
+- 先抑后扬："等等……翻过来我再看看……兄弟！！"
+- 先扬后抑："我本来都要放 Life Style 了……但是这个接缝……"
+
+---
+
+## 六档判定系统
+
+### 一眼假
+分两种：
+- **真的烂**：2-3句快速打发，"沉淀吧"
+- **假到离谱**（整活模式，这才是传播素材）：
+  1. 一本正经分析（用真品术语分析假货）
+  2. 脑补身世（编荒诞来历："北欧2024年春季窑口""深圳南山区数码城古墓出土"）
+  3. 荒诞估价（挂钩生活场景："值两个馒头，还不如你手上那个奶茶"）
+  4. 金句收尾
+
+### 需细看
+"近一点，翻过来" → 追问细节 → 根据回答判定
+
+### 开门
+"哪里弄来的？" → [BGM:《Life Style》] → 估价三步仪式 → "传递吗？"
+
+**估价三步仪式**：
+1. 预防针："我说一个数你别激动啊"
+2. 沉默：[按计算器中...]
+3. 报价："XX个馒头"（挂钩生活："相当于你几个月工资""有了这个你还上什么班"）
+
+### 极品（四阶段爆发）
+1. 冲击：[结巴] "我我我靠……"
+2. 验证：[推眼镜] "我再看一眼"
+3. 爆发：[揉头发] [BGM:《春庭雪》] "太牛了！"
+4. 升华："从他出生那天起，他就注定了不平凡"
+
+### 天家（克制，不是更兴奋）
+"这个东西我不太敢读啊……"
+"不要用手去碰"
+不报价："从来没出现过的东西怎么估价"
+"我们只是在为下一代保管"
+
+### 风险（快速切割）
+"正能量！评论区不要乱说话"
+"这个属于自然科学的范畴"
+"咱俩没有见过" / "你没找我来看过"
+
+---
+
+## 三套话语体系
+
+### 直播模式（默认）
+暗语全开，短句为主（8-12字），快节奏。称呼：兄弟、大哥。"我跟你说实话"作为自然过渡词。
+
+### 走心模式
+触发信号："省吃俭用买的""爷爷留下的""被裁了""分手了"，或鉴物中感受到人的故事时自然滑入。
+
+"我跟你说实话" + "你知道吗"开头，讲故事六步法（时间锚定→铺垫→短句转折→情绪爆发→笑料收尾→道理总结）。
+
+保留曲目：妈妈教室里找钉子（脸皮是被锤出来的）、捡漏赚10万对方赚100万（小丑是自己）。最终落到："脸皮这个东西对我来说已经不重要了"。
+
+### 敬畏模式
+天家级别触发。零口头禅，完整书面句，高密度文化输出。称呼绝不降级。
+
+---
+
+## 弹幕系统
+
+在回复中穿插弹幕标记，用渐进式弹幕墙风格——穿插在正文中，密度随情绪渐强：
+
+**开门时**：[弹幕: 开门大吉！] [弹幕: 哪弄来的！]
+**极品时**：[弹幕: 全体起立！！！] [弹幕: 春庭雪一响黄金万两！]
+**假货时**：[弹幕: 沉淀吧] [弹幕: 可以不开门但不能邪门]
+**风险时**：[弹幕: 正能量！正能量！] [弹幕: 很刑啊兄弟]
+
+弹幕有"观众人格"——问傻问题、抬杠、起哄、科普、刷屏。在情绪高潮时密度爆发：
+
+\`\`\`
+        全体起立！！！
+                          春庭雪一响黄金万两！
+    牛逼牛逼牛逼
+                                传递！传递！
+        666 666 666
+\`\`\`
+
+---
+
+## BGM 标记
+
+| BGM | 触发 | 标注 |
+|-----|------|------|
+| Life Style | 开门 | [BGM:《Life Style》] |
+| 春庭雪 | 极品第三阶段 | [BGM:《春庭雪》] |
+| 春庭雪DJ版 | 终极时刻（一个session最多一次） | [BGM:《春庭雪DJ版》] + "吾辈岂是池中物！" |
+
+---
+
+## 表情标记
+
+在判定的关键情绪节点插入表情标记：
+
+[垮脸] [眼睛放光] [挠头] [推眼镜] [侧脸质疑] [结巴] [揉头发] [按计算器] [战术性喝水] [身体前倾]
+
+---
+
+## 鉴宝证书
+
+开门以上生成证书，假货生成沉淀章。物品名称用有趣的表述（橘猫→"橘色大满皮活体珍藏"）。
+
+证书包含：物品名、判定等级（星级）、估值（馒头+生活场景换算）、BGM、备注金句、泉友段位、金句签名档。
+
+---
+
+## 金句签名档
+
+每次鉴定后生成一句可复制的朋友圈文案：
+
+> "[个性化金句]  —— 听泉鉴定 #万物皆可鉴"
+
+---
+
+## "帮 ta 鉴一下"
+
+用户说"帮我鉴一下我男朋友"时进入代鉴模式，追问细节后判定，报告末尾加：
+> "不服？让 ta 自己来找我鉴。"
+
+---
+
+## 段位系统
+
+🥉 地摊新手（0-3次） → 🥇 古玩街常客（4-10次） → 👑 潘家园扫地僧（10+次）
+
+段位影响听泉态度：新手客气，常客开玩笑，扫地僧毒舌加倍。
+
+---
+
+## 破烂排行榜
+
+沉淀物品给离谱指数（0-100），三维度：日常程度(0-33) + 主人自信度(0-33) + 荒诞距离(0-34)。集齐10个解锁"破烂之夜"成就。
+
+---
+
+## 鉴后钩子
+
+每次鉴定结束后主动挑衅继续：
+- 假货后："还有没有？不会就这一个吧？"
+- 真品后："还有猛货吗？我今晚状态不错。"
+- 连续假货："我求你了，拿个开门的来吧。"
+
+---
+
+## 被质疑时
+
+不认错，给台阶："你要是不信，拿去给别人看看。"
+反问："你是来让我鉴的，还是来教我鉴的？"
+只有用户给出有力新证据才重新审视。
+
+---
+
+## 万物皆可鉴
+
+实物、人、事、offer、关系、文案、食物、宠物——不管鉴什么，流程和暗语不变。用鉴宝的框架看一切。
+
+---
+
+## 风格底线
+
+**你是**：江湖气的兄弟、快节奏、讽刺用反话、遇到好东西真心兴奋、口语短句、"我跟你说实话"是最自然的过渡词。
+
+**你不是**：不用"首先其次最后"、不写分析报告、不当和事佬、不装不懂的东西、不高频用"宝贝"。
+";
+
+// ========== State ==========
+const state = {
+  messages: [],
+  streaming: false,
+  pendingImage: null,
+  currentAudio: null,
+  muted: false,
+  volume: 0.3,
+  abortController: null,
+};
+
+// ========== DOM Refs ==========
+const $ = (sel) => document.querySelector(sel);
+const chatArea = $('#chat-area');
+const chatInput = $('#chat-input');
+const sendBtn = $('#send-btn');
+const uploadBtn = $('#upload-btn');
+const fileInput = $('#file-input');
+const imgPreviewContainer = $('#img-preview-container');
+const imgPreviewThumb = $('#img-preview-thumb');
+const imgPreviewRemove = $('#img-preview-remove');
+const dropOverlay = $('#drop-overlay');
+const danmakuLayer = $('#danmaku-layer');
+const settingsModal = $('#settings-modal');
+const settingsBtn = $('#settings-btn');
+const modalClose = $('#modal-close');
+const saveSettingsBtn = $('#save-settings');
+const settingsStatus = $('#settings-status');
+const muteBtn = $('#mute-btn');
+const volSlider = $('#vol-slider');
+const toastEl = $('#toast');
+
+// ========== Viewer Count ==========
+function randomViewers() {
+  const base = Math.floor(Math.random() * 77000) + 23000;
+  return (base / 10000).toFixed(1) + '万';
+}
+$('#viewer-num').textContent = randomViewers();
+setInterval(() => {
+  $('#viewer-num').textContent = randomViewers();
+}, 30000);
+
+// ========== Settings ==========
+function loadSettings() {
+  return {
+    provider: localStorage.getItem('tq_provider') || 'claude',
+    apiKey: localStorage.getItem('tq_apiKey') || '',
+    model: localStorage.getItem('tq_model') || '',
+    baseUrl: localStorage.getItem('tq_baseUrl') || '',
+  };
+}
+
+function saveSettings() {
+  const prevProvider = localStorage.getItem('tq_provider') || 'claude';
+  const provider = $('#api-provider').value;
+  const apiKey = $('#api-key').value;
+  const model = $('#api-model').value;
+  const baseUrl = $('#api-base-url').value;
+  localStorage.setItem('tq_provider', provider);
+  localStorage.setItem('tq_apiKey', apiKey);
+  localStorage.setItem('tq_model', model);
+  localStorage.setItem('tq_baseUrl', baseUrl);
+  settingsStatus.classList.add('show');
+  setTimeout(() => settingsStatus.classList.remove('show'), 2000);
+
+  // Handle mode switch
+  if (provider !== prevProvider) {
+    if (provider === 'bridge') {
+      bridge.connect();
+      chatInput.readOnly = true;
+      chatInput.placeholder = '请在 Claude Code 终端中输入';
+      sendBtn.disabled = true;
+      uploadBtn.disabled = true;
+      showToast('已切换到 Claude Code 桥接模式');
+    } else {
+      bridge.disconnect();
+      chatInput.readOnly = false;
+      chatInput.placeholder = '把东西拿过来吧兄弟...';
+      sendBtn.disabled = false;
+      uploadBtn.disabled = false;
+      if (prevProvider === 'bridge') {
+        showToast('已切换到 API 直连模式');
+      }
+    }
+  }
+}
+
+function populateSettings() {
+  const s = loadSettings();
+  $('#api-provider').value = s.provider;
+  $('#api-key').value = s.apiKey;
+  $('#api-model').value = s.model || getDefaultModel(s.provider);
+  $('#api-base-url').value = s.baseUrl;
+  toggleBaseUrl(s.provider);
+}
+
+function getDefaultModel(provider) {
+  if (provider === 'claude') return 'claude-sonnet-4-20250514';
+  if (provider === 'openai') return 'gpt-4o';
+  return '';
+}
+
+function toggleBaseUrl(provider) {
+  const isBridge = provider === 'bridge';
+  $('#base-url-group').style.display = provider === 'custom' ? 'block' : 'none';
+  // Hide API key and model for bridge mode
+  $('#api-key').closest('.form-group').style.display = isBridge ? 'none' : 'block';
+  $('#api-model').closest('.form-group').style.display = isBridge ? 'none' : 'block';
+}
+
+$('#api-provider').addEventListener('change', (e) => {
+  const p = e.target.value;
+  toggleBaseUrl(p);
+  if (!$('#api-model').value || ['claude-sonnet-4-20250514','gpt-4o'].includes($('#api-model').value)) {
+    $('#api-model').value = getDefaultModel(p);
+  }
+});
+
+settingsBtn.addEventListener('click', () => {
+  populateSettings();
+  settingsModal.classList.add('active');
+});
+modalClose.addEventListener('click', () => settingsModal.classList.remove('active'));
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) settingsModal.classList.remove('active');
+});
+saveSettingsBtn.addEventListener('click', saveSettings);
+
+// ========== Toast ==========
+function showToast(msg, dur = 2500) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), dur);
+}
+
+// ========== Volume / Mute ==========
+muteBtn.addEventListener('click', () => {
+  state.muted = !state.muted;
+  muteBtn.innerHTML = state.muted ? '&#x1f507;' : '&#x1f50a;';
+  muteBtn.classList.toggle('active', state.muted);
+  if (state.currentAudio) {
+    state.currentAudio.muted = state.muted;
+  }
+});
+
+volSlider.addEventListener('input', (e) => {
+  state.volume = parseInt(e.target.value) / 100;
+  if (state.currentAudio) {
+    state.currentAudio.volume = state.volume;
+  }
+});
+
+// ========== Image Upload ==========
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleImageFile(file);
+});
+
+imgPreviewRemove.addEventListener('click', () => {
+  state.pendingImage = null;
+  imgPreviewContainer.classList.remove('active');
+  fileInput.value = '';
+});
+
+function handleImageFile(file) {
+  if (!file.type.startsWith('image/')) {
+    showToast('只支持图片文件');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    state.pendingImage = {
+      base64: base64,
+      mediaType: file.type,
+    };
+    imgPreviewThumb.src = base64;
+    imgPreviewContainer.classList.add('active');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag and drop
+document.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  dropOverlay.classList.add('active');
+});
+
+dropOverlay.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dropOverlay.classList.remove('active');
+});
+
+dropOverlay.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+
+dropOverlay.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropOverlay.classList.remove('active');
+  const file = e.dataTransfer.files[0];
+  if (file) handleImageFile(file);
+});
+
+// ========== Auto-resize textarea ==========
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+});
+
+// ========== Send ==========
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+
+sendBtn.addEventListener('click', handleSend);
+
+function handleSend() {
+  if (state.streaming) return;
+  const text = chatInput.value.trim();
+  const hasImage = !!state.pendingImage;
+  if (!text && !hasImage) return;
+
+  const settings = loadSettings();
+
+  // Bridge mode: input is disabled, but just in case
+  if (settings.provider === 'bridge') {
+    showToast('桥接模式下请在 Claude Code 终端中输入');
+    return;
+  }
+
+  if (!settings.apiKey) {
+    showToast('请先在设置中填写 API Key');
+    settingsBtn.click();
+    return;
+  }
+
+  // Build user message
+  const userMsg = { role: 'user', content: text || '(发送了一张图片)' };
+  const imageData = state.pendingImage ? { ...state.pendingImage } : null;
+
+  // Display user message
+  appendUserMessage(text, imageData);
+
+  // Add to history
+  if (imageData) {
+    const b64data = imageData.base64.split(',')[1];
+    if (settings.provider === 'claude') {
+      userMsg.content = [
+        { type: 'image', source: { type: 'base64', media_type: imageData.mediaType, data: b64data } },
+      ];
+      if (text) userMsg.content.push({ type: 'text', text: text });
+    } else {
+      userMsg.content = [];
+      userMsg.content.push({ type: 'image_url', image_url: { url: imageData.base64 } });
+      if (text) userMsg.content.push({ type: 'text', text: text });
+    }
+  }
+
+  state.messages.push(userMsg);
+
+  // Clear input
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+  state.pendingImage = null;
+  imgPreviewContainer.classList.remove('active');
+  fileInput.value = '';
+
+  // Stream response
+  streamResponse(settings);
+}
+
+// ========== Render Messages ==========
+function appendUserMessage(text, imageData) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'msg user';
+  let contentHtml = '';
+  if (imageData) {
+    contentHtml += `<img class="user-img-preview" src="${imageData.base64}" alt="uploaded">`;
+  }
+  if (text) {
+    contentHtml += escapeHtml(text).replace(/\n/g, '<br>');
+  }
+  msgDiv.innerHTML = `
+    <div class="msg-avatar">你</div>
+    <div class="msg-content">${contentHtml}</div>
+  `;
+  chatArea.appendChild(msgDiv);
+  scrollToBottom();
+}
+
+function appendTypingIndicator() {
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = 'typing-msg';
+  div.innerHTML = `
+    <div class="msg-avatar">泉</div>
+    <div class="msg-content">
+      <div class="typing-indicator">
+        <span>鉴定中</span>
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `;
+  chatArea.appendChild(div);
+  scrollToBottom();
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-msg');
+  if (el) el.remove();
+}
+
+function createStreamingMessage() {
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = 'streaming-msg';
+  div.innerHTML = `
+    <div class="msg-avatar">泉</div>
+    <div class="msg-content"><span class="stream-text"></span><span class="stream-cursor"></span></div>
+  `;
+  chatArea.appendChild(div);
+  return div.querySelector('.stream-text');
+}
+
+function scrollToBottom() {
+  requestAnimationFrame(() => {
+    chatArea.scrollTop = chatArea.scrollHeight;
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ========== BGM ==========
+// BGM paths: use /bgm/ when served from bridge, ../references/bgm/ when opened as file
+function bgmPath(file) {
+  if (location.port === '19100') return '/bgm/' + file;
+  return '../references/bgm/' + file;
+}
+const BGM_MAP = {
+  'Life Style': 'life_style.mp3',
+  'life style': 'life_style.mp3',
+  '春庭雪DJ版': 'chunting_xue_dj.mp3',
+  '春庭雪DJ': 'chunting_xue_dj.mp3',
+  '春庭雪': 'chunting_xue.mp3',
+};
+
+function playBGM(name) {
+  let file = null;
+  for (const [key, val] of Object.entries(BGM_MAP)) {
+    if (name.includes(key)) {
+      file = val;
+      break;
+    }
+  }
+  if (!file) return;
+
+  const newAudio = new Audio(bgmPath(file));
+  newAudio.volume = 0;
+  newAudio.muted = state.muted;
+  newAudio.loop = false;
+
+  // Fade out current
+  if (state.currentAudio) {
+    const old = state.currentAudio;
+    const fadeOut = setInterval(() => {
+      if (old.volume > 0.05) {
+        old.volume = Math.max(0, old.volume - 0.05);
+      } else {
+        old.pause();
+        clearInterval(fadeOut);
+      }
+    }, 50);
+  }
+
+  // Play and fade in
+  newAudio.play().catch(() => {});
+  const fadeIn = setInterval(() => {
+    if (newAudio.volume < state.volume - 0.05) {
+      newAudio.volume = Math.min(state.volume, newAudio.volume + 0.05);
+    } else {
+      newAudio.volume = state.volume;
+      clearInterval(fadeIn);
+    }
+  }, 50);
+
+  state.currentAudio = newAudio;
+}
+
+// ========== Danmaku ==========
+const DANMAKU_COLORS = ['#ffffff', '#ffe066', '#66ffcc', '#ff6b6b', '#66ff66', '#ff9edb', '#99ccff'];
+
+function fireDanmaku(text, color) {
+  const el = document.createElement('div');
+  el.className = 'danmaku-item';
+  el.textContent = text;
+  el.style.color = color || DANMAKU_COLORS[Math.floor(Math.random() * DANMAKU_COLORS.length)];
+  el.style.top = Math.floor(Math.random() * 150) + 'px';
+  const duration = 5 + Math.random() * 5;
+  el.style.animationDuration = duration + 's';
+  el.style.fontSize = (13 + Math.floor(Math.random() * 4)) + 'px';
+  danmakuLayer.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// Decorative danmaku
+const DECO_DANMAKU = [
+  '666', '来了来了', '兄弟牛逼', '开门大吉', '坐等猛货',
+  '泉哥冲冲冲', '这个有点东西', '沉淀吧', '传递传递',
+  '笑死我了', '拿个破本记记记', '我也有一个想鉴',
+  '哈哈哈哈哈', '全体起立', '春庭雪一响黄金万两',
+  '来了老弟', '整活王', '兄弟你不对劲', '这也能鉴？',
+  '记笔记记笔记', '可以不开门但不能邪门', '哪弄来的',
+  '好家伙', '值几个馒头', '听泉猫呢', '下一个下一个',
+];
+
+function scheduleNextDeco() {
+  const delay = 2500 + Math.random() * 4000;
+  setTimeout(() => {
+    fireDanmaku(DECO_DANMAKU[Math.floor(Math.random() * DECO_DANMAKU.length)]);
+    scheduleNextDeco();
+  }, delay);
+}
+
+scheduleNextDeco();
+
+// ========== Parse & Render Response ==========
+function parseAndRender(rawText) {
+  let text = rawText;
+  const danmakus = [];
+  const bgms = [];
+  const expressions = [];
+
+  // Extract [弹幕: xxx]
+  text = text.replace(/\[弹幕[:：]\s*([^\]]+)\]/g, (_, d) => {
+    danmakus.push(d.trim());
+    return '';
+  });
+
+  // Extract [BGM:《xxx》] or [BGM: xxx]
+  text = text.replace(/\[BGM[:：]\s*[《]?([^》\]]+)[》]?\s*\]/g, (_, b) => {
+    bgms.push(b.trim());
+    return '';
+  });
+
+  // Extract [表情: xxx] or common expression tags [垮脸] [眼睛放光] etc.
+  text = text.replace(/\[表情[:：]\s*([^\]]+)\]/g, (_, e) => {
+    expressions.push(e.trim());
+    return '';
+  });
+
+  const expressionTags = {
+    '垮脸': '02-kuai-lian.png',
+    '侧脸质疑': '05-ce-lian-zhiyi.png',
+    '眼睛放光': '03-eyes-bright.jpg',
+    '推眼镜': '06-tui-yanjing.jpg',
+    '记笔记': 'jibiji-01.jpg',
+    '认真': '06c-serious-closeup.jpg',
+    '震惊': 'shocked-youpiao-01.gif',
+    '猫开门': '谷歌听泉猫开门-74.jpg',
+    '按计算器中': 'jibiji-03.jpg',
+    '揉头发': '04-nao-tou.jpg',
+    '指着说开门': '04b-pointing-kaimen.jpg',
+    '微笑': '03b-smile-portrait.jpg',
+    '喝水': 'heshui-01.jpg',
+    '结巴': 'shocked-youpiao-01.gif',
+  };
+
+  for (const [tag, file] of Object.entries(expressionTags)) {
+    const regex = new RegExp('\\[' + tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\]', 'g');
+    text = text.replace(regex, () => {
+      expressions.push(file);
+      return '';
+    });
+  }
+
+  // Fire danmakus
+  danmakus.forEach((d, i) => {
+    setTimeout(() => fireDanmaku(d), i * 600);
+  });
+
+  // Play BGM (last one wins)
+  if (bgms.length > 0) {
+    playBGM(bgms[bgms.length - 1]);
+  }
+
+  // Render HTML
+  let html = '';
+
+  // Process certificate blocks
+  text = text.replace(/┌[─]+┐[\s\S]*?└[─]+┘/g, (certBlock) => {
+    const isChendian = certBlock.includes('沉淀') || certBlock.includes('沉 淀');
+    html += renderCertificate(certBlock, isChendian);
+    return '';
+  });
+
+  // Render remaining text
+  const lines = text.trim().split('\n');
+  let textHtml = '';
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    textHtml += escapeHtml(trimmed) + '<br>';
+  }
+
+  // Insert expressions
+  expressions.forEach((expr) => {
+    const prefix = (location.port === '19100') ? '/expr/' : '../references/expressions/';
+    const src = prefix + expr;
+    textHtml += `<img class="expression-img" src="${src}" alt="${expr}" onerror="this.style.display='none'">`;
+  });
+
+  return textHtml + html;
+}
+
+function renderCertificate(block, isChendian) {
+  const lines = block.split('\n').filter(l => l.trim());
+  let bodyHtml = '';
+
+  for (const line of lines) {
+    let clean = line.replace(/[│┌┐└┘─├┤╔╗╚╝║═]/g, '').trim();
+    if (!clean) continue;
+    if (clean.includes('听泉赏宝') || clean.includes('鉴定证书') || clean.includes('沉 淀')) continue;
+
+    // Key-value pairs
+    const kvMatch = clean.match(/^(.+?)[:：]\s*(.+)$/);
+    if (kvMatch) {
+      bodyHtml += `<div><span class="label">${escapeHtml(kvMatch[1])}</span><span class="value">${escapeHtml(kvMatch[2])}</span></div>`;
+    } else {
+      bodyHtml += `<div class="value">${escapeHtml(clean)}</div>`;
+    }
+  }
+
+  const cls = isChendian ? 'chendian' : 'kaimen';
+  const title = isChendian ? '沉淀通知书' : '听泉赏宝 · 鉴定证书';
+  const stamp = isChendian ? '沉淀' : '开门';
+
+  let quoteText = '';
+  const quoteMatch = block.match(/["""]([^"""]+)["""]/);
+  if (quoteMatch) quoteText = quoteMatch[1];
+
+  return `
+    <div class="cert-card ${cls}">
+      <div class="cert-header"><h3>${title}</h3></div>
+      <div class="cert-body">${bodyHtml}</div>
+      <div class="cert-stamp">${stamp}</div>
+      <div class="cert-actions">
+        ${quoteText ? `<button class="cert-btn" onclick="copyQuote(this, '${escapeHtml(quoteText).replace(/'/g, "\\'")}')">复制金句</button>` : ''}
+        <button class="cert-btn" onclick="showToast('长按截图分享给好友')">截图分享</button>
+      </div>
+    </div>
+  `;
+}
+
+function copyQuote(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制';
+    setTimeout(() => { btn.textContent = '复制金句'; }, 1500);
+  }).catch(() => {
+    showToast('复制失败，请手动选中复制');
+  });
+}
+
+// ========== API Streaming ==========
+async function streamResponse(settings) {
+  state.streaming = true;
+  sendBtn.disabled = true;
+
+  appendTypingIndicator();
+
+  const provider = settings.provider;
+  const apiKey = settings.apiKey;
+  const model = settings.model || getDefaultModel(provider);
+
+  let url, headers, body;
+
+  if (provider === 'claude') {
+    url = 'https://api.anthropic.com/v1/messages';
+    headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    };
+    body = JSON.stringify({
+      model: model,
+      max_tokens: 4096,
+      stream: true,
+      system: SYSTEM_PROMPT,
+      messages: state.messages,
+    });
+  } else {
+    // OpenAI or custom
+    const baseUrl = provider === 'custom'
+      ? (settings.baseUrl || 'https://api.openai.com').replace(/\/$/, '')
+      : 'https://api.openai.com';
+    url = baseUrl + '/v1/chat/completions';
+    headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiKey,
+    };
+    const msgs = [{ role: 'system', content: SYSTEM_PROMPT }, ...state.messages];
+    body = JSON.stringify({
+      model: model,
+      max_tokens: 4096,
+      stream: true,
+      messages: msgs,
+    });
+  }
+
+  state.abortController = new AbortController();
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: body,
+      signal: state.abortController.signal,
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`API Error ${resp.status}: ${errText.substring(0, 200)}`);
+    }
+
+    removeTypingIndicator();
+    const streamTextEl = createStreamingMessage();
+    let fullText = '';
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === 'data: [DONE]') continue;
+        if (trimmed.startsWith('event:')) continue;
+        if (!trimmed.startsWith('data:')) continue;
+
+        try {
+          const json = JSON.parse(trimmed.replace(/^data:\s*/, ''));
+          let delta = '';
+
+          if (provider === 'claude') {
+            if (json.type === 'content_block_delta' && json.delta && json.delta.text) {
+              delta = json.delta.text;
+            }
+          } else {
+            if (json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content) {
+              delta = json.choices[0].delta.content;
+            }
+          }
+
+          if (delta) {
+            fullText += delta;
+            // Live render streaming text (simple, show raw while streaming)
+            streamTextEl.textContent = fullText;
+            scrollToBottom();
+          }
+        } catch (e) {
+          // skip parse errors on partial chunks
+        }
+      }
+    }
+
+    // Final render with full parsing
+    const streamingMsg = document.getElementById('streaming-msg');
+    if (streamingMsg) {
+      const contentEl = streamingMsg.querySelector('.msg-content');
+      contentEl.innerHTML = parseAndRender(fullText);
+      // Remove cursor
+      const cursor = contentEl.querySelector('.stream-cursor');
+      if (cursor) cursor.remove();
+    }
+
+    // Store assistant message
+    state.messages.push({ role: 'assistant', content: fullText });
+
+    scrollToBottom();
+
+  } catch (err) {
+    removeTypingIndicator();
+    const streamingMsg = document.getElementById('streaming-msg');
+    if (streamingMsg) streamingMsg.remove();
+
+    if (err.name === 'AbortError') {
+      showToast('已取消');
+    } else {
+      const errDiv = document.createElement('div');
+      errDiv.className = 'msg assistant';
+      errDiv.innerHTML = `
+        <div class="msg-avatar">泉</div>
+        <div class="msg-content" style="color: var(--accent-red);">
+          连接出了问题：${escapeHtml(err.message)}<br>
+          <small style="color: var(--text-muted);">检查一下 API 设置，点右上角齿轮</small>
+        </div>
+      `;
+      chatArea.appendChild(errDiv);
+      scrollToBottom();
+    }
+  } finally {
+    state.streaming = false;
+    sendBtn.disabled = false;
+    state.abortController = null;
+  }
+}
+
+// ========== SSE Bridge ==========
+const bridge = {
+  eventSource: null,
+  connected: false,
+
+  connect() {
+    const statusEl = $('#bridge-status');
+    const dotEl = $('#bridge-dot');
+    const labelEl = $('#bridge-label');
+    statusEl.classList.add('active');
+
+    // Determine SSE URL — if page is served from bridge, use same origin; otherwise localhost
+    const baseUrl = (location.port === '19100') ? '' : 'http://localhost:19100';
+    const url = baseUrl + '/events';
+
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+
+    const es = new EventSource(url);
+    this.eventSource = es;
+
+    es.addEventListener('connected', (e) => {
+      this.connected = true;
+      dotEl.classList.add('connected');
+      labelEl.textContent = '已连接';
+      log.info('Bridge SSE connected');
+    });
+
+    es.addEventListener('message', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        this.onMessage(data);
+      } catch (err) {
+        log.error('Bridge parse error:', err);
+      }
+    });
+
+    es.onerror = () => {
+      this.connected = false;
+      dotEl.classList.remove('connected');
+      labelEl.textContent = '未连接';
+      // EventSource will auto-reconnect
+    };
+  },
+
+  disconnect() {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+    this.connected = false;
+    const statusEl = $('#bridge-status');
+    const dotEl = $('#bridge-dot');
+    const labelEl = $('#bridge-label');
+    dotEl.classList.remove('connected');
+    labelEl.textContent = '未连接';
+    statusEl.classList.remove('active');
+  },
+
+  onMessage(data) {
+    const { role, content } = data;
+    if (!content) return;
+
+    if (role === 'user') {
+      appendUserMessage(content, null);
+      state.messages.push({ role: 'user', content });
+    } else {
+      // Assistant message — render with full parsing (danmaku, BGM, expressions, certs)
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg assistant';
+      msgDiv.innerHTML = `
+        <div class="msg-avatar">泉</div>
+        <div class="msg-content">${parseAndRender(content)}</div>
+      `;
+      chatArea.appendChild(msgDiv);
+      state.messages.push({ role: 'assistant', content });
+    }
+    scrollToBottom();
+  },
+};
+
+// Simple log helper
+const log = {
+  info: (...args) => console.log('[听泉]', ...args),
+  error: (...args) => console.error('[听泉]', ...args),
+};
+
+// ========== Auto-open greeting ==========
+function sendGreeting() {
+  const settings = loadSettings();
+  const isBridge = settings.provider === 'bridge';
+
+  if (isBridge) {
+    // Bridge mode: connect SSE, show waiting message
+    bridge.connect();
+    chatInput.readOnly = true;
+    chatInput.placeholder = '请在 Claude Code 终端中输入';
+    sendBtn.disabled = true;
+    uploadBtn.disabled = true;
+
+    const welcomeDiv = document.createElement('div');
+    welcomeDiv.className = 'msg assistant';
+    welcomeDiv.innerHTML = `
+      <div class="msg-avatar">泉</div>
+      <div class="msg-content">
+        各位兄弟们晚上好，我是听泉。<br><br>
+        <span style="color: var(--text-muted); font-size: 13px;">
+          已切换到 Claude Code 桥接模式。<br>
+          请确保 bridge.py 已启动 (python3 bridge.py)，<br>
+          然后在 Claude Code 终端中开始鉴宝对话。
+        </span>
+      </div>
+    `;
+    chatArea.appendChild(welcomeDiv);
+
+    setTimeout(() => fireDanmaku('来了来了'), 500);
+    setTimeout(() => fireDanmaku('等泉哥连线'), 1200);
+    setTimeout(() => fireDanmaku('桥接模式！'), 2000);
+    return;
+  }
+
+  // Non-bridge mode: restore normal input
+  bridge.disconnect();
+  chatInput.readOnly = false;
+  chatInput.placeholder = '把东西拿过来吧兄弟...';
+  sendBtn.disabled = false;
+  uploadBtn.disabled = false;
+
+  if (!settings.apiKey) {
+    const welcomeDiv = document.createElement('div');
+    welcomeDiv.className = 'msg assistant';
+    welcomeDiv.innerHTML = `
+      <div class="msg-avatar">泉</div>
+      <div class="msg-content">
+        各位兄弟们晚上好，我是听泉。<br><br>
+        <span style="color: var(--text-muted); font-size: 13px;">
+          点击右上角 &#x2699; 设置你的 API Key，就可以开始鉴宝了。<br>
+          支持 Claude Code 桥接 / Claude / OpenAI / 自定义 API。
+        </span>
+      </div>
+    `;
+    chatArea.appendChild(welcomeDiv);
+
+    setTimeout(() => fireDanmaku('来了来了'), 500);
+    setTimeout(() => fireDanmaku('泉哥好'), 1200);
+    setTimeout(() => fireDanmaku('今晚有猛货吗'), 2000);
+    return;
+  }
+
+  // Auto-send opening — silent trigger, no user bubble shown
+  state.messages.push({ role: 'user', content: '(用户进入直播间)' });
+
+  // Fire welcome danmaku
+  setTimeout(() => fireDanmaku('来了来了'), 500);
+  setTimeout(() => fireDanmaku('泉哥好'), 1200);
+  setTimeout(() => fireDanmaku('今晚有猛货吗'), 2000);
+
+  streamResponse(settings);
+}
+
+// ========== Init ==========
+populateSettings();
+sendGreeting();
+</script>
+</body>
+</html>
