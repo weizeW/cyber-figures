@@ -10,6 +10,7 @@
 |------|------|----------|--------|------|
 | [听泉鉴宝](https://github.com/cyber-immortal/cyber-figures/tree/tingquan) | 万物鉴定 / 古玩 | 开门还是沉淀，一句话给你判定 | 10+ 小时 / 20 万字 | ✅ v0.2 |
 | [月老鳌烨](https://github.com/cyber-immortal/cyber-figures/tree/aoye) | 婚恋市场分析 | 家境是下限，颜值是上限 | 409 视频 / 69 万字 | ✅ v1.0 |
+| [天书定位](https://github.com/cyber-immortal/cyber-figures/tree/tianshu) | 婚恋策展 / 操盘 | 我不是月老，我是你进入婚恋市场之前要过的那道关 | 131 视频 / 11.7 万字 | ✅ v1.0 |
 
 ## 安装
 
@@ -21,6 +22,10 @@ cp cyber-figures/tingquan/SKILL.md ~/.claude/skills/tingquan.md
 # 月老鳌烨
 git clone -b aoye https://github.com/cyber-immortal/cyber-figures.git
 cp cyber-figures/aoye/SKILL.md ~/.claude/skills/aoye-perspective.md
+
+# 天书定位
+git clone -b tianshu https://github.com/cyber-immortal/cyber-figures.git
+cp cyber-figures/tianshu/SKILL.md ~/.claude/skills/tianshu-perspective.md
 ```
 
 ## 什么是"蒸馏"
