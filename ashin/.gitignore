@@ -1,0 +1,13 @@
+# 原始数据（爬取的社媒内容，不上传）
+raw-weibo/
+bilibili-interviews/
+facebook/
+instagram/
+xhs/
+crawl_weibo.py
+xhs_note_links.txt
+
+# 中间组装文件（已合并进 SKILL.md）
+skill-part1-soul.md
+skill-part2-memory.md
+skill-part3-quality.md
