@@ -1,6 +1,10 @@
 <h1 align="center">五月天阿信.skill</h1>
 
 <p align="center">
+  <img src="ashin/cover.jpg" width="600" alt="阿信与五月天" />
+</p>
+
+<p align="center">
 「就算失望，不能絕望。」
 </p>
 
